@@ -1,0 +1,64 @@
+name: 拉取镜像推送
+
+env:
+  ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
+  ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
+  ALIYUN_REGISTRY_USER: "${{ secrets.DOCKER_USERNAME }}"
+  ALIYUN_REGISTRY_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
+  IMAGE_NAME: "${{ variables.IMAGE_NAME }}"
+  ALIYUN_IMAGE_NAME: "${{ variables.NEW_IMAGE_NAME }}"
+  PLATFORM_ACR: {{variables.PLATFORM_ACR}}		
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: 登录到 Docker 仓库
+
+        id: login
+
+        docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
+
+        continue-on-error: true
+
+      - name: 检查 Docker 登录成功
+
+        if: ${{ steps.login.outcome == 'success' }}
+
+        run: echo "Docker 登录成功"
+
+      - name: 检查 Docker 登录失败
+
+        if: ${{ steps.login.outcome != 'success' }}
+
+        run: echo "Docker 登录失败"
+
+      - name: 拉取、标记并推送 Docker 镜像
+
+        id: pull_tag_push
+
+        run: |
+
+          docker pull --platform ${PLATFORM_ACR} ${IMAGE_NAME}
+
+          docker tag ${IMAGE_NAME} ${ALIYUN_REGISTRY}/${ALIYUN_NAME_SPACE}/${ALIYUN_IMAGE_NAME}
+
+          docker push ${ALIYUN_REGISTRY}/${ALIYUN_NAME_SPACE}/${ALIYUN_IMAGE_NAME}
+
+        continue-on-error: true
+
+      - name: 检查镜像推送成功
+
+        if: ${{ steps.pull_tag_push.outcome == 'success' }}
+
+        run: echo "Docker 镜像推送成功"
+
+      - name: 检查镜像推送失败
+
+        if: ${{ steps.pull_tag_push.outcome != 'success' }}
+
+        run: echo "Docker 镜像推送失败"
