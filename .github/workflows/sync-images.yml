@@ -1,32 +1,12 @@
 name: Docker
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-  inputs:
-
-      IMAGE_NAME:
-
-        description: '原镜像名称:版本'
-
-        required: true
-
-        default: 'rancher/rancher-agent:v2.5.7'
-
-      NEW_NAME:
-
-        description: '同步后镜像名称:版本'
-
-        required: true
-
-        default: 'rancher-agent:v2.5.7'
-
 env:
   ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
   ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
   ALIYUN_REGISTRY_USER: "${{ secrets.DOCKER_USERNAME }}"
   ALIYUN_REGISTRY_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
+  IMAGE_NAME: "rancher/rancher-agent:v2.5.7"
+  NEW_NAME: "rancher-agent:v2.5.7"
+  ARCH: "x86_64"
 
 jobs:
 
@@ -74,8 +54,8 @@ jobs:
     - name: Build and push image Aliyun
       run: |
         docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
-        docker pull --platform ${{ github.event.inputs.ARCH }} ${{ github.event.inputs.IMAGE_NAME }}
+        docker pull --platform $ARCH  $IMAGE_NAME 
 
-        docker tag ${{ github.event.inputs.IMAGE_NAME }} $ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${{ github.event.inputs.NEW_NAME }}
+        docker tag $IMAGE_NAME $ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$NEW_NAME
 
-        docker push $ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${{ github.event.inputs.NEW_NAME }}
+        docker push $ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$NEW_NAME
